@@ -10,7 +10,7 @@ interface TopMarketCapCardsProps {
 // Análise de risco para badges
 const scamAnalysis = (token: Token) => {
   let risk = 1;
-  let alerts: string[] = [];
+  const alerts: string[] = [];
   if (token.marketCap < 15_000_000) { risk += 2; alerts.push('Market cap muito baixo'); }
   if (token.volume < 400_000) { risk += 2; alerts.push('Volume extremamente baixo'); }
   if (token.marketCap > 0 && token.volume / token.marketCap < 0.001) { risk += 1; alerts.push('Volume/MCAP muito baixo'); }

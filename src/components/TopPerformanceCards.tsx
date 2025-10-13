@@ -185,7 +185,7 @@ const TopPerformanceCards: React.FC<TopPerformanceCardsProps> = ({ tokens }) => 
         <FaMagic className="text-pink-400 animate-bounce" /> Top 12 Performance 24h
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        {tokens.map((token, idx) => {
+        {tokens.map((token) => {
           const { badge, alert, risk, badgeLevel, volRatio } = performanceAnalysis(token, stats);
           const action = getPerformanceAction(token, stats, badgeLevel, volRatio);
 

@@ -30,7 +30,7 @@ const CONFIG: Record<AlertType, {
   CHESHIRES_GRIN:{ borderClass: "border-violet-400",  bgClass: "bg-black/80", ringClass: "ring-violet-400/50", shadowClass: "shadow-lg shadow-violet-400/50", textClass: "text-violet-400",  icon: <FaceFrownIcon className="w-8 h-8 text-violet-400 animate-pulse" /> },
 };
 
-export function AlertCard({ id, type, subtype, description, timestamp, token_address, affected_tokens, network }: Alert) {
+export function AlertCard({ id, type, subtype, description, timestamp, token_address, affected_tokens }: Alert) {
   const { borderClass, bgClass, ringClass, shadowClass, textClass, icon } = CONFIG[type];
 
   return (

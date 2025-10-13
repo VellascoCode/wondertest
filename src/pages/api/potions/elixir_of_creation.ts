@@ -1,4 +1,5 @@
 // pages/api/potions/elixir_of_creation.ts
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-expressions */
 
 import type { NextApiRequest, NextApiResponse } from "next";
 import { JsonRpcProvider, Contract, Log } from "ethers";
@@ -67,7 +68,7 @@ function validateTokenFields(name: string, symbol: string, decimals: number) {
 // Regras extras de score
 function extraChecks(name: string, symbol: string): { extraScore: number, reasons: string[] } {
   let extraScore = 0;
-  let reasons: string[] = [];
+  const reasons: string[] = [];
   const SUSPICIOUS_TERMS = ["TEST", "DUMMY", "MOCK", "LP", "AIRDROP", "FAUCET", "POOL", "V2", "V3", "WRAPPED", "PEG", "YIELD"];
   if (SUSPICIOUS_TERMS.some(term => name.toUpperCase().includes(term) || symbol.toUpperCase().includes(term))) {
     extraScore -= 10;
@@ -249,10 +250,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fetchMintsQuick(BSC_RPC, "BSC"),
     ]);
 
-    let eth = enrichTokens(ethRaw).filter(t => !isBlocked(t.name, t.symbol));
-    let bsc = enrichTokens(bscRaw).filter(t => !isBlocked(t.name, t.symbol));
-    let ethFinal = strictFilter(eth);
-    let bscFinal = strictFilter(bsc);
+    const eth = enrichTokens(ethRaw).filter(t => !isBlocked(t.name, t.symbol));
+    const bsc = enrichTokens(bscRaw).filter(t => !isBlocked(t.name, t.symbol));
+    const ethFinal = strictFilter(eth);
+    const bscFinal = strictFilter(bsc);
 
     // Válidos? Retorna e salva.
     if (ethFinal.length || bscFinal.length) {

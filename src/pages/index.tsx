@@ -1,15 +1,24 @@
 import Head from "next/head";
 import SectionTitle from "../components/SectionTitle";
-import AlertaCard from "../components/AlertaCard"; // Garante que esteja vindo de AlertaCard.tsx
+import AlertaCard from "../components/AlertaCard";
 import { AiOutlineRadarChart, AiFillSound, AiOutlineTags, AiFillPieChart } from "react-icons/ai";
 import { GiBrain, GiRabbit, GiAlarmClock, GiMineExplosion, GiPotionBall, GiQueenCrown } from "react-icons/gi";
 import { BsFillLightningFill } from "react-icons/bs";
 import { motion } from "framer-motion";
-import { FaCompass } from "react-icons/fa";
-import { FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaInfoCircle, FaCog, FaBell } from "react-icons/fa";
+import {
+  FaCompass,
+  FaRocket,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaExclamationTriangle,
+  FaInfoCircle,
+  FaCog,
+  FaBell
+} from "react-icons/fa";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import TokenMonitorCard from "../components/TokenMonitorCards";
+import RunAllPanel from "../components/RunAllPanel";
 
 const alertSamples = [
   { type: "info", title: "WHITE RABBIT", message: "Novo token detectado em tempo real." },
@@ -28,16 +37,12 @@ const alertColors: Record<string, string> = {
 };
 
 export default function Home() {
-  if (!alertSamples || alertSamples.length === 0) return null;
-
   useEffect(() => {
-    if (!alertSamples || alertSamples.length === 0) return;
 
     let alertIndex = 0;
     let activeToastCount = 0;
 
     const interval = setInterval(() => {
-      if (!alertSamples || alertSamples.length === 0) return;
       if (activeToastCount >= 8) return;
 
       const { title, message, type } = alertSamples[alertIndex % alertSamples.length];
@@ -95,7 +100,11 @@ export default function Home() {
             </p>
           </header>
 
-          {/* Dados Mock */}
+          <section>
+            <SectionTitle title="🚀 Orquestração Completa" icon={<FaRocket />} />
+            <RunAllPanel />
+          </section>
+
           <section>
             <SectionTitle title="📡 Dados em Tempo Real (Simulado)" icon={<AiOutlineRadarChart />} />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -119,13 +128,10 @@ export default function Home() {
             </div>
           </section>
 
-
-
-         {/* Dados em Tempo Real (WHITE RABBIT) */}
-<section>
-  <SectionTitle title="🐇 WHITE RABBIT – Tokens Monitorados" icon={<GiRabbit />} />
-         <TokenMonitorCard />
-</section>
+          <section>
+            <SectionTitle title="🐇 WHITE RABBIT – Tokens Monitorados" icon={<GiRabbit />} />
+            <TokenMonitorCard />
+          </section>
 
           {/* Alertas Mock com componente AlertaCard */}
           <section>
