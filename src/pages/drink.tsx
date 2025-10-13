@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FaHatWizard,
   FaFlask,
@@ -13,15 +13,10 @@ import {
   FaDesktop,
   FaEnvelope,
   FaWhatsapp,
-  FaChevronDown,
-  FaChevronUp,
   FaCube,
   FaTag,
   FaTint,
-  FaLayerGroup,
   FaQuestion,
-  FaArrowUp,
-  FaExpandArrowsAlt,
   FaTrophy,
   FaCalendar,
   FaPuzzlePiece,
@@ -75,7 +70,7 @@ type Registro = {
   pairedTokenDecimals?: number;
   notaGeral?: string;
   explanation?: string[];
-  outrasInfos?: any;
+  outrasInfos?: Record<string, unknown>;
   sentTelegram?: boolean;
   sentWhatsApp?: boolean;
   sentTwitter?: boolean;
@@ -116,7 +111,6 @@ const riskIcon = (risk?: string) => {
   if (risk === "Low") return <FaMagic className="inline text-green-300 mr-1" />;
   return <FaQuestion className="inline text-gray-400 mr-1" />;
 };
-const oppIcon = () => <FaArrowUp className="inline text-green-300 mr-1" />;
 const sentIcons = (r: Registro) => (
   <span>
     {r.sentTelegram && (
@@ -184,9 +178,26 @@ function getOpportunityLevel(op: number | undefined) {
   };
 }
 
+interface DrinkStats {
+  total: number;
+  returned: number;
+  byNetwork: Record<string, number>;
+  bySubType: Record<string, number>;
+  possibleScams: number;
+  withLiquidity: number;
+  goldenOpportunities: number;
+}
+
+interface ApiResponse {
+  success: boolean;
+  records: Registro[];
+  stats: DrinkStats;
+  error?: string;
+}
+
 export default function DrinkMeAlerts() {
   const [records, setRecords] = useState<Registro[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<DrinkStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -206,43 +217,44 @@ export default function DrinkMeAlerts() {
   const [modalRec, setModalRec] = useState<Registro | null>(null);
 
   useEffect(() => setMounted(true), []);
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!mounted) return;
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (networkFilter !== "ALL") params.append("network", networkFilter);
       if (riskFilter !== "ALL") params.append("riskLevel", riskFilter);
-      if (opportunityFilter !== "ALL")
-        params.append("opportunityLevel", opportunityFilter);
+      if (opportunityFilter !== "ALL") params.append("opportunityLevel", opportunityFilter);
       if (subTypeFilter !== "ALL") params.append("subType", subTypeFilter);
       if (searchTerm.trim()) params.append("search", searchTerm.trim());
       params.append("limit", String(itemsPerPage));
       params.append("skip", String((page - 1) * itemsPerPage));
       const res = await fetch(`/api/drink_me/fetch?${params.toString()}`);
-      const json = await res.json();
-      if (!json.success)
+      const json = (await res.json()) as ApiResponse;
+      if (!json.success) {
         throw new Error(json.error || "Erro ao carregar dados");
+      }
       setRecords(json.records);
       setStats(json.stats);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao carregar dados";
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchData();
   }, [
     mounted,
-    page,
     networkFilter,
     riskFilter,
     opportunityFilter,
     subTypeFilter,
     searchTerm,
+    page,
   ]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const formatDate = (timestamp?: string) => {
     if (!timestamp) return "Data Inválida";
@@ -358,14 +370,14 @@ export default function DrinkMeAlerts() {
           <div className={`${theme.card} p-1 flex flex-col items-center`}>
             <FaEthereum size={20} className="mb-1" />
             <span className="text-xl font-bold text-purple-300">
-              {stats.byNetwork.ETH}
+              {stats.byNetwork?.ETH ?? 0}
             </span>
             <span className="text-xs text-purple-200">ETH</span>
           </div>
           <div className={`${theme.card} p-1 flex flex-col items-center`}>
             <GiRabbit size={20} className="mb-1" />
             <span className="text-xl font-bold text-orange-300">
-              {stats.byNetwork.BSC}
+              {stats.byNetwork?.BSC ?? 0}
             </span>
             <span className="text-xs text-orange-200">BSC</span>
           </div>
@@ -563,6 +575,9 @@ export default function DrinkMeAlerts() {
                   </td>
                   
                   <td className="px-4 py-3 text-center">
+                    <div className="flex justify-center mb-2 gap-1 text-lg">
+                      {sentIcons(r)}
+                    </div>
                     <button
                       className="px-3 py-1 rounded bg-fuchsia-700 text-white hover:bg-fuchsia-600 transition-colors text-sm"
                       onClick={(e) => {

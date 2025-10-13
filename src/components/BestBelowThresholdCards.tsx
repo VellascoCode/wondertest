@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import {
-  FaChessQueen, FaMagic, FaBolt, FaBalanceScale, FaExclamationTriangle, FaBomb, FaArrowUp, FaArrowDown
+  FaChessQueen, FaMagic, FaBolt, FaBalanceScale, FaBomb, FaArrowUp, FaArrowDown
 } from "react-icons/fa";
 import { Tooltip } from "react-tooltip";
 import { Token } from "../types";

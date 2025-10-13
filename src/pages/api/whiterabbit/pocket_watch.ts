@@ -13,7 +13,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
  *  - Pode ser executado 1x/dia para armazenar em DB, gerar RSI etc.
  */
 
-const SELECTED_COINS = [
+export const SELECTED_COINS = [
   'bitcoin',     // BTC
   'ethereum',    // ETH
   'binancecoin', // BNB
@@ -68,29 +68,54 @@ async function fetchCoinBasicInfo(coinId: string) {
 // ------------------------------------------------------------------------
 // HANDLER
 // ------------------------------------------------------------------------
+export interface PocketWatchHistory {
+  prices: [number, number][];
+  market_caps: [number, number][];
+  total_volumes: [number, number][];
+}
+
+export interface PocketWatchCoin {
+  id: string;
+  name: string;
+  symbol: string;
+  history: PocketWatchHistory;
+}
+
+export interface PocketWatchResult {
+  success: true;
+  count: number;
+  coins: PocketWatchCoin[];
+}
+
+export async function runPocketWatch(): Promise<PocketWatchResult> {
+  const coins = await Promise.all(
+    SELECTED_COINS.map(async (coinId) => {
+      const basic = await fetchCoinBasicInfo(coinId);
+      const history = await fetchCoinHistory(coinId);
+      return {
+        ...basic,
+        history,
+      };
+    })
+  );
+
+  console.log('===== POCKET_WATCH: 15-DAY HISTORICAL =====');
+  console.log(JSON.stringify(coins, null, 2));
+
+  return {
+    success: true,
+    count: coins.length,
+    coins,
+  };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const results = await Promise.all(
-      SELECTED_COINS.map(async (coinId) => {
-        const basic = await fetchCoinBasicInfo(coinId);
-        const history = await fetchCoinHistory(coinId);
-        return {
-          ...basic,
-          history, // => { prices, market_caps, total_volumes }
-        };
-      })
-    );
-
-    console.log('===== POCKET_WATCH: 15-DAY HISTORICAL =====');
-    console.log(JSON.stringify(results, null, 2));
-
-    return res.status(200).json({
-      success: true,
-      count: results.length,
-      coins: results,
-    });
-  } catch (error: any) {
-    console.error('Erro no /pocket_watch:', error?.message || error);
-    return res.status(500).json({ success: false, error: error?.message || 'Erro inesperado' });
+    const result = await runPocketWatch();
+    return res.status(200).json(result);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error('Erro inesperado');
+    console.error('Erro no /pocket_watch:', err.message);
+    return res.status(500).json({ success: false, error: err.message || 'Erro inesperado' });
   }
 }
