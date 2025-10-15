@@ -150,11 +150,11 @@ export async function updateUser(id: string, patch: UpdateUserPatch): Promise<Pu
     { returnDocument: "after" }
   );
 
-  if (!result.value) {
+  if (!result) {
     throw new Error("Usuário não encontrado");
   }
 
-  return toPublicUser(mapUserDocument(result.value));
+  return toPublicUser(mapUserDocument(result));
 }
 
 export function toPublicUser(user: PlatformUser): PublicUser {

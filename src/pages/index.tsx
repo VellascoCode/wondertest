@@ -1,33 +1,37 @@
 import Head from "next/head";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { motion } from "framer-motion";
-import SectionTitle from "../components/SectionTitle";
-import AlertaCard from "../components/AlertaCard";
-import TokenMonitorCard from "../components/TokenMonitorCards";
-import RunAllPanel from "../components/RunAllPanel";
-import { AiOutlineRadarChart, AiFillPieChart } from "react-icons/ai";
+import SectionTitle from "@/components/SectionTitle";
+import AlertaCard from "@/components/AlertaCard";
+import TokenMonitorCard from "@/components/TokenMonitorCards";
+import RunAllPanel from "@/components/RunAllPanel";
+import { AiFillPieChart, AiOutlineRadarChart } from "react-icons/ai";
 import {
-  GiRabbit,
-  GiQueenCrown,
-  GiBrain,
   GiAlarmClock,
+  GiBrain,
   GiMineExplosion,
-  GiPotionBall
+  GiPotionBall,
+  GiQueenCrown,
+  GiRabbit
 } from "react-icons/gi";
 import { BsFillLightningFill } from "react-icons/bs";
 import {
-  FaCompass,
-  FaServer,
   FaBell,
+  FaChartLine,
+  FaCompass,
+  FaCrown,
+  FaFeatherAlt,
+  FaGlobe,
+  FaServer,
   FaShieldAlt,
   FaTools,
-  FaFeatherAlt,
-  FaCrown
+  FaUsersCog
 } from "react-icons/fa";
-import { FiArrowUpRight } from "react-icons/fi";
+import { FiArrowRight, FiArrowUpRight, FiCheckCircle, FiPlayCircle } from "react-icons/fi";
 import { useAlerts } from "@/components/Alerts";
 import { useSystemStatus } from "@/hooks/useSystemStatus";
+import { useAuth } from "@/context/AuthContext";
 import type { AlertLogItem } from "@/types";
 
 type AlertLevel = "info" | "success" | "warning" | "error" | "system";
@@ -39,13 +43,13 @@ type AlertCardTemplate = {
   level: AlertLevel;
   colorClass?: string;
   borderClass?: string;
-  icon?: JSX.Element;
+  icon?: ReactElement;
   delay?: number;
 };
 
 const levelThemeMap: Record<
   AlertLevel,
-  { icon: JSX.Element; colorClass: string; borderClass: string }
+  { icon: ReactElement; colorClass: string; borderClass: string }
 > = {
   info: {
     icon: <GiAlarmClock className="text-sky-300" />,
@@ -259,7 +263,13 @@ const badgeGlossary = [
   }
 ];
 
-export default function Home() {
+type HeroMetric = {
+  label: string;
+  value: string;
+  description: string;
+};
+
+function useLandingData(): { heroMetrics: HeroMetric[]; alertCards: AlertCardTemplate[] } {
   const { pushAlert } = useAlerts();
   const { status: systemStatus, loading: systemStatusLoading } = useSystemStatus();
   const [liveAlerts, setLiveAlerts] = useState<AlertLogItem[]>([]);
@@ -379,10 +389,8 @@ export default function Home() {
     });
   }, [liveAlerts]);
 
-import { FiArrowRight, FiCheckCircle, FiPlayCircle } from "react-icons/fi";
-import { FaChartLine, FaShieldAlt, FaUsersCog, FaCompass, FaGlobe } from "react-icons/fa";
-import SectionTitle from "@/components/SectionTitle";
-import { useAuth } from "@/context/AuthContext";
+  return { heroMetrics, alertCards };
+}
 
 const featurePillars = [
   {
@@ -464,7 +472,8 @@ const quantModules = [
   }
 ];
 
-export default function LandingPage() {
+export default function Home() {
+  const { heroMetrics, alertCards } = useLandingData();
   const { user } = useAuth();
 
   const primaryHref = user ? "/dashboard" : "/auth/signup";
@@ -799,10 +808,8 @@ export default function LandingPage() {
               </motion.div>
             </div>
           </div>
+        </section>
 
-        <title>Wonderland Trading Bot • Checkmate Intelligence</title>
-      </Head>
-      <div className="space-y-20">
         <section className="theme-glass relative overflow-hidden rounded-3xl border px-10 py-16 shadow-xl">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-fuchsia-500/5 to-transparent" aria-hidden />
           <div className="relative grid gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">

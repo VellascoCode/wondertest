@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSystemStatus, setSystemStatus } from "@/lib/systemStatus";
 import { getApiSessionUser } from "@/lib/auth/apiAuth";
+import type { SystemStatusCode } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
@@ -19,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "Campos obrigatórios: status, label, message" });
     }
 
-    const updated = await setSystemStatus(Number(status), label, message);
+    const updated = await setSystemStatus(Number(status) as SystemStatusCode, label, message);
     return res.status(200).json(updated);
   }
 

@@ -41,13 +41,17 @@ type DrinkMeDocument = Partial<DrinkMe> & {
 
 function criarAnalises(doc: DrinkMeDocument): string[] {
   const analises: string[] = [];
-  if (doc.score >= 90) analises.push("🚨 ALTO RISCO");
-  else if (doc.score <= 30) analises.push("✅ BAIXO RISCO");
+  if (typeof doc.score === "number") {
+    if (doc.score >= 90) analises.push("🚨 ALTO RISCO");
+    else if (doc.score <= 30) analises.push("✅ BAIXO RISCO");
+  }
   if (doc.classificacao && doc.classificacao.toLowerCase().includes("excelente")) analises.push("⭐ EXCELENTE");
   if (doc.classificacao && doc.classificacao.toLowerCase().includes("bom")) analises.push("👍 BOM");
   if (doc.classificacao && doc.classificacao.toLowerCase().includes("crítico")) analises.push("❌ CRÍTICO");
-  if (doc.risco === "Low" && doc.oportunidade >= 80) analises.push("🚀 OPORTUNIDADE DOURADA");
-  else if (doc.risco === "High" && doc.oportunidade >= 60) analises.push("⚡ ALTO RISCO/RETORNO");
+  if (doc.risco === "Low" && typeof doc.oportunidade === "number" && doc.oportunidade >= 80)
+    analises.push("🚀 OPORTUNIDADE DOURADA");
+  else if (doc.risco === "High" && typeof doc.oportunidade === "number" && doc.oportunidade >= 60)
+    analises.push("⚡ ALTO RISCO/RETORNO");
   if (doc.initialLiquidityUSD && doc.initialLiquidityUSD > 0) {
     if (doc.initialLiquidityUSD >= 1e6) analises.push("💧 LIQUIDEZ ALTA");
     else if (doc.initialLiquidityUSD >= 1e5) analises.push("💧 LIQUIDEZ MÉDIA");
@@ -56,8 +60,9 @@ function criarAnalises(doc: DrinkMeDocument): string[] {
   } else if (doc.subType && doc.subType !== "Elixir de Criação") {
     analises.push("⚠️ SEM LIQUIDEZ DETECTADA");
   }
-  if (doc.totalSupply > 0) {
-    const supplyFormatted = doc.totalSupply >= 1e9 ? `${(doc.totalSupply / 1e9).toFixed(1)}B` : `${(doc.totalSupply / 1e6).toFixed(1)}M`;
+  if (typeof doc.totalSupply === "number" && doc.totalSupply > 0) {
+    const supplyFormatted =
+      doc.totalSupply >= 1e9 ? `${(doc.totalSupply / 1e9).toFixed(1)}B` : `${(doc.totalSupply / 1e6).toFixed(1)}M`;
     analises.push(`📊 Supply: ${supplyFormatted}`);
     if (doc.totalSupply >= 1e12) analises.push("🔥 SUPPLY INFLACIONÁRIO");
     else if (doc.totalSupply <= 1e6) analises.push("💎 SUPPLY LIMITADO");
@@ -70,7 +75,13 @@ function criarAnalises(doc: DrinkMeDocument): string[] {
   else if (doc.subType === "Gole de Listagem") analises.push("🍷 GOLE DE LISTAGEM");
   else if (doc.subType === "Elixir de Criação") analises.push("🧬 ELIXIR DE CRIAÇÃO");
   if (doc.scam) analises.push("🚩 POSSÍVEL SCAM");
-  if (doc.risco === "Medium" && doc.oportunidade >= 70 && doc.initialLiquidityUSD > 50000)
+  if (
+    doc.risco === "Medium" &&
+    typeof doc.oportunidade === "number" &&
+    doc.oportunidade >= 70 &&
+    typeof doc.initialLiquidityUSD === "number" &&
+    doc.initialLiquidityUSD > 50000
+  )
     analises.push("🚀 POTENCIAL DE PUMP");
   return analises;
 }
@@ -153,8 +164,8 @@ function mapDrinkMeDocuments(docs: DrinkMeDocument[]): DrinkMeRecord[] {
     _id: doc._id?.toString() ?? "",
     detectionType: doc.detectionType ?? "TOKEN_MINTED",
     subType: doc.subType ?? "-",
-    network: doc.network,
-    tokenAddress: doc.tokenAddress,
+    network: doc.network ?? "-",
+    tokenAddress: doc.tokenAddress ?? "-",
     tokenSymbol: doc.symbol ?? doc.tokenSymbol ?? "-",
     tokenName: doc.name ?? doc.tokenName ?? "-",
     decimals: doc.decimals ?? "-",
@@ -175,7 +186,8 @@ function mapDrinkMeDocuments(docs: DrinkMeDocument[]): DrinkMeRecord[] {
     creationTx: doc.creationTx ?? "-",
     analises: criarAnalises(doc),
     addressShort: doc.tokenAddress ? `${doc.tokenAddress.slice(0, 6)}...${doc.tokenAddress.slice(-4)}` : "-",
-    isGoldenOpportunity: doc.risco === "Low" && doc.oportunidade >= 80,
+    isGoldenOpportunity:
+      doc.risco === "Low" && typeof doc.oportunidade === "number" && doc.oportunidade >= 80,
     isHighRisk: doc.risco === "High",
     pairedTokenAddress: doc.pairedTokenAddress ?? "-",
     pairedTokenSymbol: doc.pairedTokenSymbol ?? "-",
@@ -221,8 +233,8 @@ export async function findDrinkMeRecords(options: DrinkMeQueryOptions = {}): Pro
     ],
   };
 
-  if (network && network !== "ALL") filters.network = network;
-  if (subType && subType !== "ALL") filters.subType = subType;
+  if (network && network !== "ALL") filters.network = network as DrinkMeDocument["network"];
+  if (subType && subType !== "ALL") filters.subType = subType as DrinkMeDocument["subType"];
   if (typeof scam === "boolean") filters.scam = scam;
   if (typeof scam === "string" && scam !== "ALL") filters.scam = scam === "true";
   if (classificacao && classificacao !== "ALL") filters.classificacao = classificacao;

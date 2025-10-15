@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
-import type { GetServerSideProps } from "next";
+import type { GetServerSideProps, NextApiRequest, NextApiResponse } from "next";
 import type { Session } from "next-auth";
 import { getServerSession } from "next-auth";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -376,7 +376,7 @@ export default function DashboardPage() {
               Visualização rápida dos alertas mais recentes vindos do motor. Use o laboratório para confirmar a resolução.
             </p>
             <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-              {alertCards.map(({ key, icon, title, text, colorClass, borderClass, delay }) => (
+              {alertCards.map(({ key, icon, title, text, colorClass = "", borderClass = "", delay }) => (
                 <AlertaCard
                   key={key}
                   icon={icon}
@@ -507,7 +507,11 @@ export default function DashboardPage() {
 }
 
 export const getServerSideProps: GetServerSideProps<DashboardPageProps> = async (context) => {
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const session = await getServerSession(
+    context.req as NextApiRequest,
+    context.res as NextApiResponse,
+    authOptions
+  );
   const sessionUser = session?.user as SessionUser | undefined;
 
   if (!sessionUser) {

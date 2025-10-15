@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getApiSessionUser } from "@/lib/auth/apiAuth";
 import { getAllUsers, toPublicUser, updateUser } from "@/lib/auth/userService";
+import type { UserStatus, UserType } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getApiSessionUser(req, res);
@@ -21,8 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       const updated = await updateUser(id, {
-        ...(type !== undefined ? { type: Number(type) } : {}),
-        ...(status !== undefined ? { status: Number(status) } : {})
+        ...(type !== undefined ? { type: Number(type) as UserType } : {}),
+        ...(status !== undefined ? { status: Number(status) as UserStatus } : {})
       });
       return res.status(200).json({ user: updated });
     } catch (error) {
