@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
-import type { GetServerSideProps } from "next";
+import type { GetServerSideProps, NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { useMemo, useState } from "react";
@@ -11,7 +11,7 @@ import SectionTitle from "@/components/SectionTitle";
 import RunAllPanel from "@/components/RunAllPanel";
 import { getSystemStatus } from "@/lib/systemStatus";
 import { getAllUsers, toPublicUser } from "@/lib/auth/userService";
-import type { PublicUser, SessionUser, SystemStatusState } from "@/types";
+import type { PublicUser, SessionUser, SystemStatusState, UserStatus, UserType } from "@/types";
 import { authOptions } from "@/lib/auth/nextAuthOptions";
 
 const statusOptions: Array<{ value: number; label: string; message: string; accent: string }> = [
@@ -335,7 +335,9 @@ export default function AdminPage({ systemStatus: initialSystemStatus, users: in
                       <select
                         className="theme-input w-full rounded-lg px-3 py-2 text-sm"
                         value={user.type}
-                        onChange={(event) => handleUserUpdate(user.id, { type: Number(event.target.value) })}
+                        onChange={(event) =>
+                          handleUserUpdate(user.id, { type: Number(event.target.value) as UserType })
+                        }
                       >
                         {typeOptions.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -348,7 +350,9 @@ export default function AdminPage({ systemStatus: initialSystemStatus, users: in
                       <select
                         className="theme-input w-full rounded-lg px-3 py-2 text-sm"
                         value={user.status}
-                        onChange={(event) => handleUserUpdate(user.id, { status: Number(event.target.value) })}
+                        onChange={(event) =>
+                          handleUserUpdate(user.id, { status: Number(event.target.value) as UserStatus })
+                        }
                       >
                         {statusUserOptions.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -369,7 +373,11 @@ export default function AdminPage({ systemStatus: initialSystemStatus, users: in
 }
 
 export const getServerSideProps: GetServerSideProps<AdminPageProps> = async (context) => {
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const session = await getServerSession(
+    context.req as NextApiRequest,
+    context.res as NextApiResponse,
+    authOptions
+  );
   const sessionUser = session?.user as SessionUser | undefined;
 
   if (!sessionUser || !sessionUser.isAdmin) {

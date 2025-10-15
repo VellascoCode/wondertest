@@ -1,19 +1,28 @@
 import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import type { AlertLogItem } from "@/types";
+import type { AlertLogItem, AlertType } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { useAlerts } from "@/components/Alerts";
+import type { AlertType as UiAlertType } from "@/components/Alerts";
 
-const levelStyles: Record<string, string> = {
+const levelStyles: Record<UiAlertType, string> = {
+  error: "bg-rose-500/10 border-rose-400/40 text-rose-200",
+  warning: "bg-amber-500/10 border-amber-400/40 text-amber-200",
+  notification: "bg-orange-500/10 border-orange-400/40 text-orange-200",
   info: "bg-sky-500/10 border-sky-400/40 text-sky-200",
   success: "bg-emerald-500/10 border-emerald-400/40 text-emerald-200",
-  warning: "bg-amber-500/10 border-amber-400/40 text-amber-200",
-  error: "bg-rose-500/10 border-rose-400/40 text-rose-200",
   system: "bg-fuchsia-500/10 border-fuchsia-400/40 text-fuchsia-200"
 };
 
-const simulatedAlerts = [
+const simulatedAlerts: Array<{
+  id: string;
+  type: AlertType;
+  level: UiAlertType;
+  description: string;
+  message: string;
+  network: string;
+}> = [
   {
     id: "sim-grow",
     type: "GROW_ME",
@@ -171,7 +180,7 @@ export default function AlertsTestPage() {
   const triggerSimulatedAlert = (id: string) => {
     const simulated = simulatedAlerts.find((alert) => alert.id === id);
     if (!simulated) return;
-    pushAlert(simulated.message, simulated.level as keyof typeof levelStyles, simulated.type);
+    pushAlert(simulated.message, simulated.level, simulated.type);
     toast.success(`Alerta ${simulated.type} publicado no topo.`);
   };
 
