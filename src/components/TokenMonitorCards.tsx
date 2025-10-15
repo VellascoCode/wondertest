@@ -25,7 +25,11 @@ interface DiscoverData {
   updatedAt?: string;
 }
 
-const TokenMonitorCards: React.FC = () => {
+interface TokenMonitorCardsProps {
+  className?: string;
+}
+
+const TokenMonitorCards: React.FC<TokenMonitorCardsProps> = ({ className = "" }) => {
   const [data, setData] = useState<DiscoverData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -66,8 +70,10 @@ const TokenMonitorCards: React.FC = () => {
 
   const lastUpdated = data.updatedAt ? new Date(data.updatedAt) : null;
 
+  const containerClasses = ["space-y-8", className].filter(Boolean).join(" ");
+
   return (
-    <div className="container mx-auto p-4 space-y-8">
+    <div className={containerClasses}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-gradient-to-br from-indigo-900/70 to-purple-900/40 border border-indigo-600/60 rounded-2xl p-4 shadow-lg text-indigo-50">
           <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
