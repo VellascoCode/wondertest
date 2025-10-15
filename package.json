@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "alert-cron": "node scripts/run-alert-engine.js"
+    "alert-cron": "node scripts/run-alert-engine.js",
+    "seed": "node scripts/seed-admin.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

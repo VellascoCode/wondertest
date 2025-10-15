@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { SessionUser } from "@/types";
 import { serializeCookie, extractCookie } from "@/utils/cookies";
-import { createSession, getSessionUser, purgeExpiredSessions, revokeSession } from "@/lib/auth/sessionService";
+import { createSessionToken, getSessionMaxAge, readSessionToken } from "@/lib/auth/sessionToken";
+import { getUserByEmail, toSessionUser } from "@/lib/auth/userService";
 
 export interface AuthOptions {
   credentials: {
@@ -17,6 +18,20 @@ export interface Session {
 export type SessionStatus = "loading" | "authenticated" | "unauthenticated";
 
 const DEFAULT_SESSION_COOKIE = "checkmate_session";
+
+async function resolveSessionUser(token: string | undefined): Promise<SessionUser | null> {
+  const payload = readSessionToken(token);
+  if (!payload) {
+    return null;
+  }
+
+  const user = await getUserByEmail(payload.email);
+  if (!user || user.status === 2) {
+    return null;
+  }
+
+  return toSessionUser(user);
+}
 
 function resolveCookieName(options?: AuthOptions) {
   return options?.sessionCookieName ?? DEFAULT_SESSION_COOKIE;
@@ -35,21 +50,20 @@ export default function NextAuth(options: AuthOptions) {
     const segments = resolveSegments(req);
 
     if (segments.length === 1 && segments[0] === "session" && req.method === "GET") {
-      await purgeExpiredSessions();
       const token = extractCookie(req, cookieName);
-      const user = await getSessionUser(token);
-      return res.status(200).json({ user, token });
+      const user = await resolveSessionUser(token);
+      return res.status(200).json({ user });
     }
 
     if (segments.length === 2 && segments[0] === "callback" && segments[1] === "credentials" && req.method === "POST") {
-      await purgeExpiredSessions();
       try {
         const user = await options.credentials.authorize(req.body ?? {});
-        const token = await createSession(user.id);
+        const token = createSessionToken(user.email);
         const cookie = serializeCookie(cookieName, token, {
           httpOnly: true,
-          maxAge: 60 * 60 * 8,
-          path: "/"
+          maxAge: getSessionMaxAge(),
+          path: "/",
+          secure: process.env.NODE_ENV === "production"
         });
         res.setHeader("Set-Cookie", cookie);
         return res.status(200).json({ user });
@@ -59,14 +73,12 @@ export default function NextAuth(options: AuthOptions) {
     }
 
     if (segments.length === 1 && segments[0] === "signout" && req.method === "POST") {
-      const token = extractCookie(req, cookieName) ?? req.body?.token;
-      if (token) {
-        await revokeSession(token);
-      }
+      void req.body?.token;
       const cookie = serializeCookie(cookieName, "", {
         httpOnly: true,
         maxAge: 0,
-        path: "/"
+        path: "/",
+        secure: process.env.NODE_ENV === "production"
       });
       res.setHeader("Set-Cookie", cookie);
       return res.status(200).json({ ok: true });
@@ -85,7 +97,7 @@ export async function getServerSession(
   void res;
   const cookieName = resolveCookieName(options);
   const token = extractCookie(req, cookieName);
-  const user = await getSessionUser(token);
+  const user = await resolveSessionUser(token);
   if (!user) {
     return null;
   }
