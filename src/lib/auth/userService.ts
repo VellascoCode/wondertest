@@ -1,8 +1,7 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
-import { readJSON, writeJSON } from "@/lib/fileStore";
+import { MongoServerError, type Collection, type WithId } from "mongodb";
+import clientPromise from "@/lib/mongodb";
 import type { PlatformUser, PublicUser, SessionUser, UserStatus, UserType } from "@/types";
-
-const USERS_FILE = "users.json";
 
 interface CreateUserInput {
   name: string;
@@ -12,18 +11,62 @@ interface CreateUserInput {
   status?: UserStatus;
 }
 
+interface UserDocument extends Omit<PlatformUser, "createdAt" | "updatedAt"> {
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+let usersCollectionPromise: Promise<Collection<UserDocument>> | null = null;
+
+async function getUsersCollection(): Promise<Collection<UserDocument>> {
+  if (!usersCollectionPromise) {
+    usersCollectionPromise = (async () => {
+      const client = await clientPromise;
+      const collection = client.db().collection<UserDocument>("users");
+      await collection.createIndex({ email: 1 }, { unique: true });
+      await collection.createIndex({ id: 1 }, { unique: true });
+      return collection;
+    })();
+  }
+  return usersCollectionPromise;
+}
+
+function normalizeDate(value: Date | string): string {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  return new Date(value).toISOString();
+}
+
+function mapUserDocument(doc: WithId<UserDocument>): PlatformUser {
+  return {
+    id: doc.id,
+    name: doc.name,
+    email: doc.email,
+    passwordHash: doc.passwordHash,
+    type: doc.type,
+    status: doc.status,
+    createdAt: normalizeDate(doc.createdAt),
+    updatedAt: normalizeDate(doc.updatedAt)
+  };
+}
+
 export async function getAllUsers(): Promise<PlatformUser[]> {
-  return readJSON<PlatformUser[]>(USERS_FILE, []);
+  const collection = await getUsersCollection();
+  const docs = await collection.find({}, { sort: { createdAt: -1 } }).toArray();
+  return docs.map(mapUserDocument);
 }
 
 export async function getUserByEmail(email: string): Promise<PlatformUser | undefined> {
-  const users = await getAllUsers();
-  return users.find((user) => user.email.toLowerCase() === email.toLowerCase());
+  const collection = await getUsersCollection();
+  const doc = await collection.findOne({ email: email.toLowerCase() });
+  return doc ? mapUserDocument(doc) : undefined;
 }
 
 export async function getUserById(id: string): Promise<PlatformUser | undefined> {
-  const users = await getAllUsers();
-  return users.find((user) => user.id === id);
+  const collection = await getUsersCollection();
+  const doc = await collection.findOne({ id });
+  return doc ? mapUserDocument(doc) : undefined;
 }
 
 export function hashPassword(password: string): string {
@@ -45,14 +88,9 @@ export async function createUser(input: CreateUserInput): Promise<PublicUser> {
   const type: UserType = input.type ?? 0;
   const status: UserStatus = input.status ?? 0;
 
-  const existing = await getUserByEmail(email);
-  if (existing) {
-    throw new Error("E-mail já está cadastrado");
-  }
-
-  const users = await getAllUsers();
-  const now = new Date().toISOString();
-  const newUser: PlatformUser = {
+  const collection = await getUsersCollection();
+  const now = new Date();
+  const userDocument: UserDocument = {
     id: randomBytes(12).toString("hex"),
     name,
     email: email.toLowerCase(),
@@ -63,27 +101,60 @@ export async function createUser(input: CreateUserInput): Promise<PublicUser> {
     updatedAt: now
   };
 
-  users.push(newUser);
-  await writeJSON(USERS_FILE, users);
-  return toPublicUser(newUser);
+  try {
+    await collection.insertOne(userDocument);
+  } catch (error) {
+    if (error instanceof MongoServerError && error.code === 11000) {
+      throw new Error("E-mail já está cadastrado");
+    }
+    throw error;
+  }
+
+  const platformUser: PlatformUser = {
+    id: userDocument.id,
+    name: userDocument.name,
+    email: userDocument.email,
+    passwordHash: userDocument.passwordHash,
+    type: userDocument.type,
+    status: userDocument.status,
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString()
+  };
+
+  return toPublicUser(platformUser);
 }
 
-export async function updateUser(id: string, patch: Partial<Omit<PlatformUser, "id" | "email" | "createdAt">>): Promise<PublicUser> {
-  const users = await getAllUsers();
-  const idx = users.findIndex((user) => user.id === id);
-  if (idx === -1) {
+type UpdateUserPatch = Partial<Pick<PlatformUser, "name" | "passwordHash" | "type" | "status">>;
+
+export async function updateUser(id: string, patch: UpdateUserPatch): Promise<PublicUser> {
+  const collection = await getUsersCollection();
+  const now = new Date();
+  const updateFields: Partial<UserDocument> = { updatedAt: now };
+
+  if (patch.name !== undefined) {
+    updateFields.name = patch.name;
+  }
+  if (patch.passwordHash !== undefined) {
+    updateFields.passwordHash = patch.passwordHash;
+  }
+  if (patch.type !== undefined) {
+    updateFields.type = patch.type;
+  }
+  if (patch.status !== undefined) {
+    updateFields.status = patch.status;
+  }
+
+  const result = await collection.findOneAndUpdate(
+    { id },
+    { $set: updateFields },
+    { returnDocument: "after" }
+  );
+
+  if (!result.value) {
     throw new Error("Usuário não encontrado");
   }
 
-  const now = new Date().toISOString();
-  const updated: PlatformUser = {
-    ...users[idx],
-    ...patch,
-    updatedAt: now
-  };
-  users[idx] = updated;
-  await writeJSON(USERS_FILE, users);
-  return toPublicUser(updated);
+  return toPublicUser(mapUserDocument(result.value));
 }
 
 export function toPublicUser(user: PlatformUser): PublicUser {

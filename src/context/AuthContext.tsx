@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useMemo } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import type { SessionUser } from "@/types";
 
 interface AuthContextValue {
@@ -12,54 +13,22 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchSession = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/auth/session");
-      const data = await response.json();
-      setUser(data.user ?? null);
-    } catch (error) {
-      console.error("Erro ao recuperar sessão", error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchSession();
-  }, [fetchSession]);
+  const { data, status } = useSession();
 
   const login = useCallback(async (email: string, password: string) => {
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false
     });
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error ?? "Não foi possível entrar");
+    if (result?.error) {
+      throw new Error(result.error);
     }
-
-    const data = await response.json();
-    setUser(data.user);
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      const response = await fetch("/api/auth/logout", { method: "POST" });
-      if (!response.ok) {
-        throw new Error("Falha ao encerrar sessão");
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setUser(null);
-    }
+    await signOut({ redirect: false });
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
@@ -75,11 +44,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = useMemo<AuthContextValue>(() => {
+    const sessionUser = (data?.user as SessionUser | undefined) ?? null;
+    return {
+      user: sessionUser,
+      loading: status === "loading",
+      login,
+      logout,
+      register
+    };
+  }, [data, status, login, logout, register]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export function useAuth() {

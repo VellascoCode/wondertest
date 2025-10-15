@@ -1,64 +1,76 @@
 import { randomBytes } from "crypto";
-import { readJSON, writeJSON } from "@/lib/fileStore";
+import type { Collection } from "mongodb";
+import clientPromise from "@/lib/mongodb";
 import type { SessionUser } from "@/types";
 import { getUserById, toSessionUser } from "./userService";
 
-const SESSIONS_FILE = "sessions.json";
 const SESSION_TTL_HOURS = 8;
 
-interface StoredSession {
+interface SessionDocument {
   token: string;
   userId: string;
-  createdAt: string;
-  expiresAt: string;
+  createdAt: Date | string;
+  expiresAt: Date | string;
 }
 
-async function getSessions(): Promise<StoredSession[]> {
-  return readJSON<StoredSession[]>(SESSIONS_FILE, []);
+let sessionsCollectionPromise: Promise<Collection<SessionDocument>> | null = null;
+
+async function getSessionsCollection(): Promise<Collection<SessionDocument>> {
+  if (!sessionsCollectionPromise) {
+    sessionsCollectionPromise = (async () => {
+      const client = await clientPromise;
+      const collection = client.db().collection<SessionDocument>("sessions");
+      await collection.createIndex({ token: 1 }, { unique: true });
+      await collection.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+      return collection;
+    })();
+  }
+  return sessionsCollectionPromise;
 }
 
 export async function createSession(userId: string): Promise<string> {
-  const sessions = await getSessions();
+  const collection = await getSessionsCollection();
   const token = randomBytes(24).toString("hex");
   const now = new Date();
   const expiresAt = new Date(now.getTime() + SESSION_TTL_HOURS * 60 * 60 * 1000);
 
-  sessions.push({
+  await collection.insertOne({
     token,
     userId,
-    createdAt: now.toISOString(),
-    expiresAt: expiresAt.toISOString()
+    createdAt: now,
+    expiresAt
   });
 
-  await writeJSON(SESSIONS_FILE, sessions);
   return token;
 }
 
 export async function revokeSession(token: string): Promise<void> {
-  const sessions = await getSessions();
-  const filtered = sessions.filter((session) => session.token !== token);
-  await writeJSON(SESSIONS_FILE, filtered);
+  const collection = await getSessionsCollection();
+  await collection.deleteOne({ token });
 }
 
 export async function getSessionUser(token: string | undefined): Promise<SessionUser | null> {
   if (!token) return null;
-  const sessions = await getSessions();
-  const now = Date.now();
-  const activeSession = sessions.find((session) => session.token === token && new Date(session.expiresAt).getTime() > now);
-  if (!activeSession) {
+
+  const collection = await getSessionsCollection();
+  const session = await collection.findOne({ token });
+  if (!session) {
     return null;
   }
 
-  const user = await getUserById(activeSession.userId);
+  const expiresAt = session.expiresAt instanceof Date ? session.expiresAt : new Date(session.expiresAt);
+
+  if (expiresAt.getTime() <= Date.now()) {
+    await collection.deleteOne({ token });
+    return null;
+  }
+
+  const user = await getUserById(session.userId);
   if (!user) return null;
   return toSessionUser(user);
 }
 
 export async function purgeExpiredSessions(): Promise<void> {
-  const sessions = await getSessions();
-  const now = Date.now();
-  const active = sessions.filter((session) => new Date(session.expiresAt).getTime() > now);
-  if (active.length !== sessions.length) {
-    await writeJSON(SESSIONS_FILE, active);
-  }
+  const collection = await getSessionsCollection();
+  await collection.deleteMany({ expiresAt: { $lte: new Date() } });
 }

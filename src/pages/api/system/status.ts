@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "POST") {
-    const sessionUser = await getApiSessionUser(req);
+    const sessionUser = await getApiSessionUser(req, res);
     if (!sessionUser || !sessionUser.isAdmin) {
       return res.status(403).json({ error: "Apenas administradores podem alterar o status" });
     }
