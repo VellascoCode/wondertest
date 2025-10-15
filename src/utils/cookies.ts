@@ -1,6 +1,13 @@
 import type { NextApiRequest } from "next";
 
-export function serializeCookie(name: string, value: string, options: { httpOnly?: boolean; maxAge?: number; path?: string } = {}): string {
+interface CookieOptions {
+  httpOnly?: boolean;
+  maxAge?: number;
+  path?: string;
+  secure?: boolean;
+}
+
+export function serializeCookie(name: string, value: string, options: CookieOptions = {}): string {
   const parts = [`${name}=${value}`];
   if (options.maxAge) {
     parts.push(`Max-Age=${options.maxAge}`);
@@ -8,6 +15,9 @@ export function serializeCookie(name: string, value: string, options: { httpOnly
   parts.push(`Path=${options.path ?? "/"}`);
   if (options.httpOnly) {
     parts.push("HttpOnly");
+  }
+  if (options.secure) {
+    parts.push("Secure");
   }
   parts.push("SameSite=Lax");
   return parts.join("; ");

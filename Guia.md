@@ -24,13 +24,23 @@ Dentro da pasta do projeto execute:
 npm install
 ```
 
+### Popular o banco rapidamente
+
+Após instalar as dependências, garanta o usuário administrador e o documento de status executando:
+
+```bash
+npm run seed
+```
+
+> O script utiliza `MONGODB_URI` e as variáveis opcionais `SEED_ADMIN_*` definidas no `.env.local` para criar/atualizar o admin padrão.
+
 ## 3. Executando o ambiente de desenvolvimento
 
 ```bash
 npm run dev
 ```
 
-O servidor Next.js subirá em `http://localhost:3000`. A interface principal traz o dashboard encantado com cards temáticos, alertas visuais e o painel de orquestração.
+O servidor Next.js subirá em `http://localhost:3000`. A interface principal traz o dashboard encantado com cards temáticos, alertas visuais e o painel de orquestração. Todas as sessões são apresentadas em coluna única para preservar o storytelling sequencial (sem dividir cards em colunas 1/2), seguindo a orientação do cliente.
 
 ## 4. Banco de dados
 
@@ -39,9 +49,28 @@ As rotinas `White Rabbit` e `Drink Me` utilizam a base MongoDB `wonder` com as c
 - `glass` — snapshots do Looking Glass (market cap, performances e filtros de preço)
 - `drink_me` — tokens detectados recentemente pelo oráculo Drink Me
 
+O seed (`npm run seed`) também garante:
+
+- Coleção `users` com admin ativo (tipo ≥ 9) e hashes `scrypt`.
+- Documento `system_status` com `_id = "global"`, status operacional e índices necessários.
+
 Certifique-se de que o serviço MongoDB está ativo antes de chamar as APIs.
 
-## 5. APIs principais
+## 4.1 Direção de arte
+
+- Os SVGs antigos foram removidos. Gere PNGs profissionais seguindo o arquivo `public/illustrations/ART_PROMPTS.md`.
+- Após exportar as artes (preferencialmente 4K com fundo transparente), salve-as usando os IDs sugeridos para que a landing carregue automaticamente.
+- Utilize ferramentas como Midjourney, DALL·E ou Stable Diffusion XL para alcançar o estilo anime/cartoon desejado.
+
+## 5. Autenticação & sessões
+
+- Login por credenciais (`/auth/signin`) consultando diretamente a coleção `users`.
+- Após a validação, o backend emite um cookie HTTP-only chamado `.session`, assinado com `NEXTAUTH_SECRET`.
+- Nenhuma sessão é gravada no banco; cada requisição sensível consulta o usuário no MongoDB usando o e-mail do cookie.
+- O endpoint `GET /api/auth/check` centraliza a verificação (retorna dados públicos, `isAdmin` e janelas `issuedAt/expiresAt`).
+- Usuários com `status === 2` têm acesso bloqueado automaticamente e o cookie é invalidado.
+
+## 6. APIs principais
 
 ### 5.1 White Rabbit
 
@@ -63,7 +92,7 @@ Certifique-se de que o serviço MongoDB está ativo antes de chamar as APIs.
 | --- | --- |
 | `GET /api/potions/elixir_of_creation` | Scanner on-chain (ETH/BSC) para mints recentes — requer `ANKR_API_KEY` |
 
-## 6. Orquestrar tudo de uma vez
+## 7. Orquestrar tudo de uma vez
 
 Acesse `http://localhost:3000/api/runall` para executar o pipeline completo:
 
@@ -76,14 +105,14 @@ O endpoint responde com um JSON contendo o status de cada etapa, tempo de execu�
 
 Na interface web você pode acionar o mesmo fluxo pelo painel “🚀 Orquestração Completa”, que registra os passos com feedback visual.
 
-## 7. Fluxo de uso sugerido
+## 8. Fluxo de uso sugerido
 
 1. **Rodar `/api/runall`** (ou o botão do painel) para sincronizar dados.
 2. **Visitar `http://localhost:3000`** para ver o dashboard temático com cards de mercado, alertas e listas classificadas.
 3. **Explorar `http://localhost:3000/drink`** para navegar pelos tokens detectados pelo Drink Me, aplicar filtros e exportar CSV.
 4. **Executar `npm run lint`** antes de commitar para garantir o padrão de código.
 
-## 8. Troubleshooting
+## 9. Troubleshooting
 
 - **Erros de conexão MongoDB**: confirme o valor de `MONGODB_URI` e se o serviço está ativo.
 - **429 no Looking Glass**: o endpoint protege contra atualizações sucessivas em menos de 14 minutos; use `?force=true` ou aguarde o intervalo.

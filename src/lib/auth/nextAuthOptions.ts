@@ -2,7 +2,7 @@ import type { AuthOptions } from "next-auth";
 import { getUserByEmail, toSessionUser, verifyPassword } from "./userService";
 
 export const authOptions: AuthOptions = {
-  sessionCookieName: "checkmate_session",
+  sessionCookieName: ".session",
   credentials: {
     async authorize(credentials) {
       const email = typeof credentials?.email === "string" ? credentials.email : undefined;

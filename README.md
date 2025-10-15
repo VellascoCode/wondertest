@@ -1,40 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# 🎩 Checkmate Intelligence
 
-## Getting Started
+Painel temático inspirado em *Alice no País das Maravilhas* que combina scanners multi-chain, governança de risco e um cockpit visual construído em Next.js.
 
-First, run the development server:
+## ✨ Principais recursos
+
+- Dashboard cinematográfico com layout multi-seção, gradientes animados e placeholders prontos para PNGs temáticos.
+- Motor de alertas integrado (`White Rabbit`, `Drink Me`, `Alert Engine`) consumindo MongoDB.
+- Autenticação por cookie `.session` assinado (sem coleção de sessões) com verificação em tempo real pelo banco.
+- Portal administrativo com controle de status global e gestão de usuários.
+- Script de seed para criar administrador padrão e documento de status do sistema.
+
+## 🚀 Primeiros passos
+
+### 1. Dependências
+
+- Node.js 18+
+- MongoDB local ou remoto
+
+Crie um arquivo `.env.local` na raiz (os valores abaixo são exemplos):
+
+```env
+NEXTAUTH_SECRET="R5HgPQ8zX2vN9mK4jL7tY1wC3bF6uA0n"
+MONGODB_URI="mongodb://localhost:27017/wonder"
+# Opcional: personalize o admin inicial
+SEED_ADMIN_EMAIL="admin@wonder.land"
+SEED_ADMIN_PASSWORD="Wonderland#2024"
+SEED_ADMIN_NAME="Queen Admin"
+```
+
+### 2. Instalação
+
+```bash
+npm install
+```
+
+### 3. Popular o banco
+
+```bash
+npm run seed
+```
+
+O script cria (ou garante) o usuário administrador informado nas variáveis `SEED_ADMIN_*` e o documento `system_status` com estado operacional.
+
+### 4. Executar em desenvolvimento
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+O cockpit ficará disponível em [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## 🔐 Sessões e autenticação
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+- O login utiliza credenciais armazenadas na coleção `users` (hash `scrypt` com salt aleatório).
+- Após autenticação, é emitido um cookie HTTP-only `.session` assinado com `NEXTAUTH_SECRET` contendo apenas e-mail e timestamp.
+- Cada chamada à API `/api/auth/session` ou `/api/auth/check` valida a assinatura, consulta o usuário por e-mail e verifica status/tipo em tempo real.
+- Usuários banidos (`status === 2`) têm a sessão automaticamente invalidada.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+## 🗺️ Estrutura de pastas destacada
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├─ components/        # Cards, títulos de seção e widgets reutilizáveis
+├─ context/           # Providers de autenticação e tema
+├─ hooks/             # Hooks para status do sistema e alertas
+├─ lib/
+│  ├─ auth/           # Serviços de usuário, opções e token da sessão
+│  ├─ next-auth/      # Implementação customizada estilo NextAuth
+│  └─ systemStatus.ts # Regras de leitura/escrita do status global
+├─ pages/
+│  ├─ api/            # Rotas REST (alertas, auth, admin, status)
+│  ├─ admin/          # Portal administrativo protegido
+│  ├─ auth/           # Telas de login/cadastro
+│  └─ index.tsx       # Landing page principal temática
+└─ utils/             # Utilitários (cookies, formatação, etc.)
+```
 
-## Learn More
+## 🔌 APIs úteis
 
-To learn more about Next.js, take a look at the following resources:
+| Endpoint | Descrição |
+| --- | --- |
+| `GET /api/auth/check` | Valida cookie `.session` e retorna usuário/timeline da sessão |
+| `POST /api/alerts/run` | Gera alertas simulados (requer admin) |
+| `GET /api/system/status` | Estado global do sistema (protegido) |
+| `GET /api/whiterabbit/discover` | Último snapshot consolidado do radar |
+| `GET /api/runall` | Executa pipeline completo de coleta e análise |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+## 🖼️ Interface e direção de arte
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+A landing foi reconstruída com seções cinematográficas, gradientes dinâmicos e painéis animados via `framer-motion`. No lugar de SVGs genéricos, o projeto agora provê prompts profissionais para geração das artes cartoon/anime — basta seguir `public/illustrations/ART_PROMPTS.md`, exportar os PNGs em alta definição e posicioná-los nas sessões indicadas.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+Para detalhes adicionais consulte `Guia.md` (setup completo) e `doc.md` (documentação temática estendida).

@@ -6,6 +6,8 @@ leve o tmepo que for, mas ajuste tudo, as apis e faca funcionar conforme a docum
 
 siga a ideia domprpojeto atual, arrume as paginas, embeleze, e me monte um guia.
 
+> Atualização recente: os SVGs antigos foram removidos. Gere PNGs temáticos seguindo `public/illustrations/ART_PROMPTS.md` para alimentar a nova landing cinematográfica.
+
 Guia.md, sobre como afzer tudo rodar, e uma localhost:3000/api/runall(para rodar tudo das apis, sem eu ter de usar postman ou algo assim, somente acessando)
 
 para etstar efazer tudo conforme a ideia

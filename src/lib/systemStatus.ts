@@ -23,7 +23,7 @@ async function getStatusCollection(): Promise<Collection<SystemStatusDocument>> 
     statusCollectionPromise = (async () => {
       const client = await clientPromise;
       const collection = client.db().collection<SystemStatusDocument>("system_status");
-      await collection.createIndex({ _id: 1 }, { unique: true });
+      await collection.createIndex({ status: 1 });
       return collection;
     })();
   }
