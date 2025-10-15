@@ -1,9 +1,9 @@
-import type { NextApiRequest } from "next";
-import { extractCookie } from "@/utils/cookies";
-import { getSessionUser } from "./sessionService";
-import { SESSION_COOKIE } from "@/pages/api/auth/login";
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth";
+import type { SessionUser } from "@/types";
+import { authOptions } from "./nextAuthOptions";
 
-export async function getApiSessionUser(req: NextApiRequest) {
-  const token = extractCookie(req, SESSION_COOKIE);
-  return getSessionUser(token);
+export async function getApiSessionUser(req: NextApiRequest, res: NextApiResponse): Promise<SessionUser | null> {
+  const session = await getServerSession(req, res, authOptions);
+  return (session?.user as SessionUser | undefined) ?? null;
 }

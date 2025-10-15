@@ -1,9 +1,43 @@
 import { randomUUID } from "crypto";
-import { readJSON, writeJSON } from "@/lib/fileStore";
+import type { Collection, FindOptions, WithId } from "mongodb";
+import clientPromise from "@/lib/mongodb";
 import type { AlertLogItem, AlertType } from "@/types";
 
-const ALERT_LOG_FILE = "alerts-log.json";
 const MAX_ALERTS = 60;
+
+interface AlertDocument extends Omit<AlertLogItem, "timestamp"> {
+  timestamp: Date;
+}
+
+let alertsCollectionPromise: Promise<Collection<AlertDocument>> | null = null;
+
+async function getAlertsCollection(): Promise<Collection<AlertDocument>> {
+  if (!alertsCollectionPromise) {
+    alertsCollectionPromise = (async () => {
+      const client = await clientPromise;
+      const collection = client.db().collection<AlertDocument>("alerts_log");
+      await collection.createIndex({ id: 1 }, { unique: true });
+      await collection.createIndex({ timestamp: -1 });
+      return collection;
+    })();
+  }
+  return alertsCollectionPromise;
+}
+
+function mapAlertDocument(doc: WithId<AlertDocument>): AlertLogItem {
+  return {
+    id: doc.id,
+    type: doc.type,
+    subtype: doc.subtype,
+    description: doc.description,
+    timestamp: doc.timestamp.toISOString(),
+    token_address: doc.token_address,
+    affected_tokens: doc.affected_tokens,
+    network: doc.network,
+    level: doc.level,
+    resolved: doc.resolved
+  };
+}
 
 const baseAlertPool: Array<Omit<AlertLogItem, "id" | "timestamp">> = [
   {
@@ -48,17 +82,18 @@ const baseAlertPool: Array<Omit<AlertLogItem, "id" | "timestamp">> = [
   }
 ];
 
-async function ensureLog(): Promise<AlertLogItem[]> {
-  return readJSON<AlertLogItem[]>(ALERT_LOG_FILE, []);
-}
-
 export async function getAlertLog(limit?: number): Promise<AlertLogItem[]> {
-  const log = await ensureLog();
-  return typeof limit === "number" ? log.slice(0, limit) : log;
+  const collection = await getAlertsCollection();
+  const options: FindOptions<AlertDocument> = { sort: { timestamp: -1 } };
+  if (typeof limit === "number") {
+    options.limit = limit;
+  }
+  const docs = await collection.find({}, options).toArray();
+  return docs.map(mapAlertDocument);
 }
 
 export async function runBaseAlertScan(): Promise<AlertLogItem> {
-  const log = await ensureLog();
+  const collection = await getAlertsCollection();
   const nextIndex = Math.floor(Date.now() / (1000 * 60)) % baseAlertPool.length;
   const base = baseAlertPool[nextIndex];
 
@@ -68,15 +103,24 @@ export async function runBaseAlertScan(): Promise<AlertLogItem> {
     timestamp: new Date().toISOString()
   };
 
-  const updated = [alert, ...log].slice(0, MAX_ALERTS);
-  await writeJSON(ALERT_LOG_FILE, updated);
+  await collection.insertOne({
+    ...alert,
+    timestamp: new Date(alert.timestamp)
+  });
+
+  const excess = await collection
+    .find({}, { sort: { timestamp: -1 }, skip: MAX_ALERTS, projection: { _id: 1 } })
+    .toArray();
+  if (excess.length > 0) {
+    await collection.deleteMany({ _id: { $in: excess.map((doc) => doc._id) } });
+  }
+
   return alert;
 }
 
 export async function markAlertAsResolved(id: string): Promise<void> {
-  const log = await ensureLog();
-  const updated = log.map((entry) => (entry.id === id ? { ...entry, resolved: true } : entry));
-  await writeJSON(ALERT_LOG_FILE, updated);
+  const collection = await getAlertsCollection();
+  await collection.updateOne({ id }, { $set: { resolved: true } });
 }
 
 export async function getLatestAlertsForDisplay(limit = 10) {

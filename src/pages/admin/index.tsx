@@ -1,12 +1,13 @@
 import Head from "next/head";
-import { GetServerSideProps } from "next";
+import type { GetServerSideProps } from "next";
+import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { getSystemStatus } from "@/lib/systemStatus";
-import { getSessionUser } from "@/lib/auth/sessionService";
 import { getAllUsers, toPublicUser } from "@/lib/auth/userService";
-import type { PublicUser, SystemStatusState } from "@/types";
-import { SESSION_COOKIE } from "@/pages/api/auth/login";
+import type { PublicUser, SessionUser, SystemStatusState } from "@/types";
+import { authOptions } from "@/lib/auth/nextAuthOptions";
 
 const statusOptions: Array<{ value: number; label: string; message: string; accent: string }> = [
   { value: 1, label: "Operacional", message: "Sistema aberto para todos os usuários.", accent: "bg-emerald-500/15 text-emerald-200" },
@@ -34,7 +35,9 @@ interface AdminProps {
   users: PublicUser[];
 }
 
-export default function AdminPage({ systemStatus: initialSystemStatus, users: initialUsers }: AdminProps) {
+type AdminPageProps = AdminProps & { session?: Session | null };
+
+export default function AdminPage({ systemStatus: initialSystemStatus, users: initialUsers }: AdminPageProps) {
   const [systemStatus, setSystemStatus] = useState<SystemStatusState>(initialSystemStatus);
   const [statusLabel, setStatusLabel] = useState(initialSystemStatus.label);
   const [statusMessage, setStatusMessage] = useState(initialSystemStatus.message);
@@ -205,21 +208,10 @@ export default function AdminPage({ systemStatus: initialSystemStatus, users: in
   );
 }
 
-function getCookieFromHeader(header: string | undefined, key: string) {
-  if (!header) return undefined;
-  const cookies = header.split(";");
-  for (const cookie of cookies) {
-    const [name, ...rest] = cookie.trim().split("=");
-    if (name === key) {
-      return rest.join("=");
-    }
-  }
-  return undefined;
-}
+export const getServerSideProps: GetServerSideProps<AdminPageProps> = async (context) => {
+  const session = await getServerSession(context.req, context.res, authOptions);
+  const sessionUser = session?.user as SessionUser | undefined;
 
-export const getServerSideProps: GetServerSideProps<AdminProps> = async (context) => {
-  const token = getCookieFromHeader(context.req.headers.cookie, SESSION_COOKIE);
-  const sessionUser = await getSessionUser(token);
   if (!sessionUser || !sessionUser.isAdmin) {
     return {
       redirect: {
@@ -233,6 +225,7 @@ export const getServerSideProps: GetServerSideProps<AdminProps> = async (context
 
   return {
     props: {
+      session,
       systemStatus,
       users: users.map(toPublicUser)
     }

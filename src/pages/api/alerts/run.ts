@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Método não suportado" });
   }
 
-  const sessionUser = await getApiSessionUser(req);
+  const sessionUser = await getApiSessionUser(req, res);
   if (!sessionUser || !sessionUser.isAdmin) {
     return res.status(403).json({ error: "Apenas administradores podem disparar o scanner" });
   }
