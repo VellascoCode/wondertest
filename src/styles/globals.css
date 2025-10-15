@@ -20,7 +20,29 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-wonderland);
-  transition: background 0.3s, color 0.3s;
+  transition: background 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+body.theme-light {
+  --background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+  --foreground: #111827;
+  --card-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(226, 232, 240, 0.9));
+  color: var(--foreground);
+}
+
+body.theme-dark {
+  --background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+  --foreground: #f8fafc;
+  --card-glass: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.9));
+  color: var(--foreground);
+}
+
+body.theme-fantasy {
+  --background: linear-gradient(135deg, #2a1437 0%, #0f172a 100%);
+  --foreground: #fdf4ff;
+  --card-glass: linear-gradient(135deg, rgba(147, 51, 234, 0.45), rgba(59, 130, 246, 0.45));
+  color: var(--foreground);
 }
 
 /* Wonderland */
@@ -41,6 +63,87 @@ body {
   backdrop-filter: blur(2.2px);
   -webkit-backdrop-filter: blur(2.2px);
   transition: box-shadow 0.24s, border 0.24s, transform 0.15s;
+}
+
+.theme-glass {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(15, 23, 42, 0.75);
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: inherit;
+}
+
+body.theme-light .theme-glass {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  color: #0f172a;
+}
+
+body.theme-fantasy .theme-glass {
+  background: linear-gradient(120deg, rgba(129, 27, 197, 0.4), rgba(59, 130, 246, 0.35));
+  border-color: rgba(250, 250, 250, 0.12) !important;
+  color: #fdf4ff;
+}
+
+.nav-link {
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.nav-link:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.menu-button {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.4);
+}
+
+body.theme-light .menu-button {
+  border-color: rgba(15, 23, 42, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.status-badge {
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.15);
+}
+
+.text-contrast-muted {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+body.theme-light .text-contrast-muted {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+body.theme-fantasy .status-badge {
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.24);
+}
+
+.theme-input {
+  background: rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: inherit;
+}
+
+body.theme-light .theme-input {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: #0f172a;
+}
+
+.user-avatar {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.45);
+  color: #f8fafc;
+}
+
+body.theme-light .user-avatar {
+  border-color: rgba(15, 23, 42, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
 }
 
 .wonderland-card:hover {

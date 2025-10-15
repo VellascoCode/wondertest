@@ -25,7 +25,7 @@ const alertSamples = [
   { type: "success", title: "GROW_ME", message: "Token $ALICE em zona de suporte com RSI baixo." },
   { type: "warning", title: "RABBIT_HOLE", message: "Volatilidade detectada para scalp rápido." },
   { type: "error", title: "CHESHIRES_GRIN", message: "SCAM Score elevado em novo token." },
-  { type: "system", title: "QUEENS_ORDER", message: "Stop global ativado por perda de capital." },
+  { type: "system", title: "QUEENS_ORDER", message: "Stop global ativado por perda de capital." }
 ];
 
 const alertColors: Record<string, string> = {
@@ -36,14 +36,56 @@ const alertColors: Record<string, string> = {
   system: "border-cyan-700 border"
 };
 
+const marketPulse = [
+  { token: "$BTC", value: "+2.5%", description: "Momentum positivo em 24h", color: "text-emerald-400" },
+  { token: "$ETH", value: "-1.2%", description: "Correção após rally", color: "text-rose-400" },
+  { token: "$ALICE", value: "0.0%", description: "Consolidação estável", color: "text-amber-300" }
+];
+
+const verifiers = [
+  { emoji: "🐇", nome: "WHITE RABBIT", desc: "Coleta dados multi-chain em tempo real via WebSocket/API." },
+  { emoji: "😼", nome: "CHESHIRE CAT", desc: "Pontua riscos e SCAM Score em contratos recém-criados." },
+  { emoji: "🎩", nome: "MAD HATTER", desc: "Identifica volatilidade extrema e padrões de pump." },
+  { emoji: "♥️", nome: "QUEEN OF HEARTS", desc: "Gerencia stops globais e congelamento de operações." },
+  { emoji: "🐛", nome: "CATERPILLAR", desc: "Executa análise técnica (RSI, Fibonacci e Liquidez)." },
+  { emoji: "🐢", nome: "MOCK TURTLE", desc: "Realiza backtests contínuos de setups vencedores." }
+];
+
+const alertTypes = [
+  ["🍷 DRINK_ME", "Novo Token listado com liquidez saudável."],
+  ["🍰 EAT_ME", "Pump acima de 15% em 5 minutos."],
+  ["🌱 GROW_ME", "RSI abaixo de 30 sinalizando suporte."],
+  ["🍪 SHRINK_ME", "RSI acima de 70 em resistência relevante."],
+  ["🕳️ RABBIT_HOLE", "Volatilidade extrema para scalp estratégico."],
+  ["🫖 TEA_PARTY", "Zona de acumulação com RSI inferior a 35."],
+  ["♟️ CHECKMATE", "Sinal de oportunidade multi-indicadores."]
+];
+
+const riskBadges = [
+  ["🔴 SCAM HIGH", "Contrato não verificado + liquidez solta + owner >30%."],
+  ["🟠 SCAM MEDIUM", "Liquidez inferior a 50% ou owner não renunciado."],
+  ["🟢 SCAM LOW", "Contrato verificado + liquidez travada + owner renunciado."],
+  ["🟡 PUMP POTENTIAL", "Volume 5x acima da média aliado a RSI < 35."],
+  ["🟣 DUMP WARNING", "Queda >10% em 15min + funding negativo."],
+  ["🔵 SMART MONEY IN", "Wallets institucionais movimentando > $100k."],
+  ["⚫ BLACK SWAN", "Eventos macro que impactam derivativos."],
+  ["🟩 RECOVERY", "Retomada após liquidação agressiva."]
+];
+
+const tiers = [
+  ["Micro", "$0.50 – $5", "0.5–2%", "🔴"],
+  ["Standard", "$1 – $10", "1–3%", "🟠"],
+  ["Premium", "$5 – $50", "2–5%", "🟢"],
+  ["Institutional", ">$50", "3–8%", "🟣"]
+];
+
 export default function Home() {
   useEffect(() => {
-
     let alertIndex = 0;
     let activeToastCount = 0;
 
     const interval = setInterval(() => {
-      if (activeToastCount >= 8) return;
+      if (activeToastCount >= 6) return;
 
       const { title, message, type } = alertSamples[alertIndex % alertSamples.length];
 
@@ -89,219 +131,205 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Wonderland Trading Bot</title>
+        <title>Checkmate Intelligence</title>
       </Head>
-      <main className="min-h-screen bg-gradient-to-br from-[#1a1a1a] to-black text-white p-6">
-        <div className="max-w-6xl mx-auto space-y-16">
-          <header>
-            <h1 className="text-4xl font-bold mb-4">🎩 Wonderland Trading Bot</h1>
-            <p className="text-lg">
-              Um universo de alertas temáticos para o mercado cripto. Navegue com os personagens do País das Maravilhas entre oportunidades, riscos e decisões. 🐇♠️🫖
-            </p>
-          </header>
+      <div className="space-y-12">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.8fr)]">
+          <div className="theme-glass rounded-3xl border px-10 py-12 shadow-lg">
+            <div className="max-w-2xl space-y-6">
+              <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-emerald-200">
+                Wonderland Quant Deck
+              </span>
+              <h1 className="text-4xl font-bold leading-tight md:text-5xl">
+                🎩 Automação tática para <span className="text-emerald-300">operadores cripto</span>
+              </h1>
+              <p className="text-lg text-contrast-muted">
+                Combine scanners, sinais e controles de risco em um cockpit único. O Checkmate orquestra alertas temáticos com narrativa de Wonderland e profundidade quantitativa.
+              </p>
+            </div>
+            <div className="mt-10">
+              <SectionTitle title="🚀 Orquestração Completa" icon={<FaRocket />} />
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                <RunAllPanel />
+              </div>
+            </div>
+          </div>
 
-          <section>
-            <SectionTitle title="🚀 Orquestração Completa" icon={<FaRocket />} />
-            <RunAllPanel />
-          </section>
+          <div className="space-y-6">
+            <div className="theme-glass rounded-3xl border px-8 py-8 shadow-lg">
+              <SectionTitle title="📡 Pulse de Mercado" icon={<AiOutlineRadarChart />} />
+              <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                {marketPulse.map(({ token, value, description, color }) => (
+                  <motion.div
+                    key={token}
+                    className="rounded-2xl border border-white/10 bg-black/20 p-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35 }}
+                  >
+                    <p className="text-xs uppercase tracking-wide text-contrast-muted">Token</p>
+                    <h3 className="text-xl font-bold">{token}</h3>
+                    <p className={`${color} mt-1 font-semibold`}>{value}</p>
+                    <p className="mt-2 text-xs text-contrast-muted">{description}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
 
-          <section>
-            <SectionTitle title="📡 Dados em Tempo Real (Simulado)" icon={<AiOutlineRadarChart />} />
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { token: "$BTC", value: "+2.5%", color: "text-green-400" },
-                { token: "$ETH", value: "-1.2%", color: "text-red-400" },
-                { token: "$ALICE", value: "0.0%", color: "text-yellow-400" },
-              ].map(({ token, value, color }) => (
+            <div className="theme-glass rounded-3xl border px-8 py-8 shadow-lg">
+              <SectionTitle title="🐇 WHITE RABBIT – Tokens Monitorados" icon={<GiRabbit />} />
+              <div className="mt-4">
+                <TokenMonitorCard />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="theme-glass rounded-3xl border px-8 py-8 shadow-lg">
+          <SectionTitle title="📢 Alertas Ativos (Mock)" icon={<AiFillSound />} />
+          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+            {[ 
+              {
+                icon: <GiPotionBall className="text-emerald-300" />,
+                title: "GROW_ME",
+                text: "🌱 Hora de crescer! Token: $ALICE — RSI: 28 — Suporte detectado.",
+                colorClass: "bg-emerald-500/10",
+                borderClass: "border-emerald-400/40"
+              },
+              {
+                icon: <GiRabbit className="text-amber-300" />,
+                title: "RABBIT_HOLE",
+                text: "🕳️ Entrada rápida! Volatilidade +5% em 2min — Spread ajustado.",
+                colorClass: "bg-amber-500/10",
+                borderClass: "border-amber-400/40"
+              },
+              {
+                icon: <GiQueenCrown className="text-rose-300" />,
+                title: "QUEENS_ORDER",
+                text: "♠️ Stop global ativado! Perda acumulada superior a 10%.",
+                colorClass: "bg-rose-500/10",
+                borderClass: "border-rose-400/40"
+              },
+              {
+                icon: <GiAlarmClock className="text-sky-300" />,
+                title: "DRINK_ME",
+                text: "🍷 Listagem recente com liquidez verificada e auditoria automática.",
+                colorClass: "bg-sky-500/10",
+                borderClass: "border-sky-400/40"
+              },
+              {
+                icon: <BsFillLightningFill className="text-fuchsia-300" />,
+                title: "EAT_ME",
+                text: "⚡ Pump detectado! Preço subiu +17% em 4min.",
+                colorClass: "bg-fuchsia-500/10",
+                borderClass: "border-fuchsia-400/40"
+              },
+              {
+                icon: <GiMineExplosion className="text-purple-300" />,
+                title: "CHESHIRES_GRIN",
+                text: "⚠️ SCAM Score acima de 80%! Risco elevado.",
+                colorClass: "bg-purple-500/10",
+                borderClass: "border-purple-400/40"
+              }
+            ].map(({ icon, title, text, colorClass, borderClass }, index) => (
+              <AlertaCard
+                key={index}
+                icon={icon}
+                title={title}
+                text={text}
+                colorClass={colorClass}
+                borderClass={borderClass}
+                delay={index * 0.05}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-2">
+          <div className="theme-glass rounded-3xl border px-8 py-8 shadow-lg">
+            <SectionTitle title="🧠 Sistemas de Verificação" icon={<GiBrain />} />
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {verifiers.map(({ emoji, nome, desc }) => (
                 <motion.div
-                  key={token}
-                  className="bg-white/5 border border-white/10 rounded-lg p-4"
+                  key={nome}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-4"
                   initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35 }}
                 >
-                  <p className="text-sm text-gray-400">Token</p>
-                  <h3 className="text-xl font-bold">{token}</h3>
-                  <p className={`${color} mt-1`}>{value} (24h)</p>
+                  <h3 className="text-lg font-semibold">{emoji} {nome}</h3>
+                  <p className="mt-1 text-sm text-contrast-muted">{desc}</p>
                 </motion.div>
               ))}
             </div>
-          </section>
+          </div>
 
-          <section>
-            <SectionTitle title="🐇 WHITE RABBIT – Tokens Monitorados" icon={<GiRabbit />} />
-            <TokenMonitorCard />
-          </section>
-
-          {/* Alertas Mock com componente AlertaCard */}
-          <section>
-            <SectionTitle title="📢 Alertas Ativos (Mock)" icon={<AiFillSound />} />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                {
-                  icon: <GiPotionBall />,
-                  title: "GROW_ME",
-                  text: "🌱 Hora de crescer! Token: $ALICE — RSI: 28 — Suporte detectado.",
-                  colorClass: "bg-green-900/30",
-                  borderClass: "border-green-700"
-                },
-                {
-                  icon: <GiRabbit />,
-                  title: "RABBIT_HOLE",
-                  text: "🕳️ Entrada rápida! Volatilidade +5% em 2min — Spread apertado.",
-                  colorClass: "bg-yellow-900/30",
-                  borderClass: "border-yellow-700"
-                },
-                {
-                  icon: <GiQueenCrown />,
-                  title: "QUEENS_ORDER",
-                  text: "♠️ Stop global ativado! Perda acumulada superior a 10%.",
-                  colorClass: "bg-red-900/30",
-                  borderClass: "border-red-700"
-                },
-                {
-                  icon: <BsFillLightningFill />,
-                  title: "EAT_ME",
-                  text: "🍰 Pump detectado! Preço subiu +17% em 4min.",
-                  colorClass: "bg-pink-900/30",
-                  borderClass: "border-pink-700"
-                },
-                {
-                  icon: <GiAlarmClock />,
-                  title: "DRINK_ME",
-                  text: "🍷 Novo token listado com liquidez detectada.",
-                  colorClass: "bg-blue-900/30",
-                  borderClass: "border-blue-700"
-                },
-                {
-                  icon: <GiMineExplosion />,
-                  title: "CHESHIRES_GRIN",
-                  text: "⚠️ SCAM Score acima de 80%! Risco elevado.",
-                  colorClass: "bg-purple-900/30",
-                  borderClass: "border-purple-700"
-                }
-              ].map(({ icon, title, text, colorClass, borderClass }, index) => (
-                <AlertaCard
-                  key={index}
-                  icon={icon}
-                  title={title}
-                  text={text}
-                  colorClass={colorClass}
-                  borderClass={borderClass}
-                  delay={index * 0.05}
-                />
-              ))}
-            </div>
-          </section>
-
-          {/* Personagens Verificadores */}
-          <section>
-            <SectionTitle title="🧠 Sistemas de Verificação (Personagens)" icon={<GiBrain />} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm text-white/90">
-              {[
-                { emoji: "🐇", nome: "WHITE RABBIT", desc: "Coleta dados em tempo real via WebSocket/API." },
-                { emoji: "😼", nome: "CHESHIRE CAT", desc: "Avalia riscos e SCAM Score de novos tokens." },
-                { emoji: "🎩", nome: "MAD HATTER", desc: "Detecta volatilidade extrema e padrões de pump." },
-                { emoji: "♥️", nome: "QUEEN OF HEARTS", desc: "Monitora perdas e ativa stop global." },
-                { emoji: "🐛", nome: "CATERPILLAR", desc: "Análise técnica avançada (RSI, Fibonacci)." },
-                { emoji: "🐢", nome: "MOCK TURTLE", desc: "Executa backtests e avalia histórico." },
-              ].map(({ emoji, nome, desc }) => (
-                <motion.div 
-                  key={nome} 
-                  className="bg-white/5 border border-white/10 rounded-lg p-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <h3 className="font-bold">{emoji} {nome}</h3>
-                  <p>{desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </section>
-
-          {/* Tipos de Alerta */}
-          <section>
+          <div className="theme-glass rounded-3xl border px-8 py-8 shadow-lg">
             <SectionTitle title="🧭 Tipos de Alerta" icon={<FaCompass />} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-white/90">
-              {[
-                ["🍷 DRINK_ME", "Novo Token listado com liquidez."],
-                ["🍰 EAT_ME", "Pump >15% em 5min."],
-                ["🌱 GROW_ME", "RSI < 30 e preço em suporte."],
-                ["🍪 SHRINK_ME", "RSI > 70 e resistência."],
-                ["🕳️ RABBIT_HOLE", "Volatilidade extrema para scalp."],
-                ["🫖 TEA_PARTY", "Zona de acumulação (RSI < 35)."],
-              ].map(([nome, desc]) => (
-                <motion.div 
-                  key={nome} 
-                  className="bg-white/5 border border-white/10 rounded-lg p-4"
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {alertTypes.map(([nome, desc]) => (
+                <motion.div
+                  key={nome}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-4"
                   initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35 }}
                 >
-                  <h3 className="font-bold">{nome}</h3>
-                  <p>{desc}</p>
+                  <h3 className="text-lg font-semibold">{nome}</h3>
+                  <p className="mt-1 text-sm text-contrast-muted">{desc}</p>
                 </motion.div>
               ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Badges de Risco */}
-          <section>
+        <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+          <div className="theme-glass rounded-3xl border px-8 py-8 shadow-lg">
             <SectionTitle title="🏷️ Badges de Risco" icon={<AiOutlineTags />} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm text-white/90">
-              {[
-                ["🔴 SCAM HIGH", "Contrato não verificado + liquidez solta + dono com >30%."],
-                ["🟠 SCAM MEDIUM", "Liquidez <50% ou dono não renunciado."],
-                ["🟢 SCAM LOW", "Contrato verificado, liquidez travada e dono renunciado."],
-                ["🟡 PUMP POTENTIAL", "Volume 5x acima da média + RSI < 35."],
-                ["🟣 DUMP WARNING", "Queda >10% em 15min + funding negativo."],
-                ["🔵 SMART MONEY IN", "Transações > $100k de wallets institucionais."],
-              ].map(([badge, desc]) => (
-                <motion.div 
-                  key={badge} 
-                  className="bg-white/5 border border-white/10 rounded-lg p-4"
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+              {riskBadges.map(([badge, desc]) => (
+                <motion.div
+                  key={badge}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-4"
                   initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.35 }}
                 >
-                  <h3 className="font-bold">{badge}</h3>
-                  <p>{desc}</p>
+                  <h3 className="text-lg font-semibold">{badge}</h3>
+                  <p className="mt-1 text-sm text-contrast-muted">{desc}</p>
                 </motion.div>
               ))}
             </div>
-          </section>
+          </div>
 
-          {/* Tiers de Risco */}
-          <section>
+          <div className="theme-glass rounded-3xl border px-8 py-8 shadow-lg">
             <SectionTitle title="📊 Tiers de Operação" icon={<AiFillPieChart />} />
-            <table className="w-full text-sm text-white/90 border border-white/10">
-              <thead className="bg-white/10">
+            <table className="mt-6 w-full overflow-hidden rounded-2xl text-sm">
+              <thead className="bg-black/30 text-left text-xs uppercase tracking-wide text-contrast-muted">
                 <tr>
-                  <th className="p-2 text-left">Tier</th>
-                  <th className="p-2 text-left">Valor</th>
-                  <th className="p-2 text-left">Alocação</th>
-                  <th className="p-2 text-left">Risco</th>
+                  <th className="px-4 py-3">Tier</th>
+                  <th className="px-4 py-3">Valor</th>
+                  <th className="px-4 py-3">Alocação</th>
+                  <th className="px-4 py-3">Risco</th>
                 </tr>
               </thead>
-              <tbody>
-                {[
-                  ["Micro", "$0.50 – $5", "0.5–2%", "🔴"],
-                  ["Standard", "$1 – $10", "1–3%", "🟠"],
-                  ["Premium", "$5 – $50", "2–5%", "🟢"],
-                ].map(([tier, valor, alocacao, risco]) => (
-                  <tr key={tier} className="border-t border-white/10">
-                    <td className="p-2">{tier}</td>
-                    <td className="p-2">{valor}</td>
-                    <td className="p-2">{alocacao}</td>
-                    <td className="p-2">{risco}</td>
+              <tbody className="bg-black/10">
+                {tiers.map(([tier, valor, alocacao, risco]) => (
+                  <tr key={tier} className="border-t border-white/5">
+                    <td className="px-4 py-3 font-semibold">{tier}</td>
+                    <td className="px-4 py-3 text-contrast-muted">{valor}</td>
+                    <td className="px-4 py-3 text-contrast-muted">{alocacao}</td>
+                    <td className="px-4 py-3 text-xl">{risco}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </section>
-        </div>
-      </main>
+          </div>
+        </section>
+      </div>
     </>
   );
 }
