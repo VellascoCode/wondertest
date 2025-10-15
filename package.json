@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "alert-cron": "node scripts/run-alert-engine.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
