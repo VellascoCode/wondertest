@@ -22,7 +22,8 @@ const statusLabels: Record<number, string> = {
 };
 
 const navLinks = [
-  { href: "/", label: "Dashboard" },
+  { href: "/", label: "Landing" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/alerts-test", label: "Alert test" }
 ];
 
